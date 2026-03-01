@@ -1,0 +1,65 @@
+# -----------------------------------------------------------------------------
+# Mahonys Packing System - Root .gitignore
+# -----------------------------------------------------------------------------
+
+# --- Environment & secrets ---
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- Frontend (Next.js / Node) ---
+Mahonys-Packing-frontend/node_modules/
+Mahonys-Packing-frontend/.next/
+Mahonys-Packing-frontend/out/
+Mahonys-Packing-frontend/build/
+Mahonys-Packing-frontend/.turbo
+Mahonys-Packing-frontend/.vercel
+Mahonys-Packing-frontend/npm-debug.log*
+Mahonys-Packing-frontend/yarn-debug.log*
+Mahonys-Packing-frontend/yarn-error.log*
+Mahonys-Packing-frontend/.pnp
+Mahonys-Packing-frontend/.pnp.js
+Mahonys-Packing-frontend/coverage/
+Mahonys-Packing-frontend/.nyc_output/
+
+# --- Backend (Laravel / PHP) ---
+Mahonys-Packing-backend/vendor/
+Mahonys-Packing-backend/node_modules/
+Mahonys-Packing-backend/.phpunit.result.cache
+Mahonys-Packing-backend/Homestead.json
+Mahonys-Packing-backend/Homestead.yaml
+Mahonys-Packing-backend/auth.json
+Mahonys-Packing-backend/.phpunit.cache/
+Mahonys-Packing-backend/storage/*.key
+# Keep storage structure; ignore generated content (Laravel often has .gitignore inside storage)
+Mahonys-Packing-backend/bootstrap/cache/*.php
+!Mahonys-Packing-backend/bootstrap/cache/.gitignore
+
+# --- OS & editor ---
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- Logs & temp ---
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# --- Optional: uncomment if you use these ---
+# .env.backup
+# *.sqlite
+# *.sqlite-journal
