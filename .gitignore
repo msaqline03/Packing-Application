@@ -24,6 +24,8 @@ Mahonys-Packing-frontend/.pnp
 Mahonys-Packing-frontend/.pnp.js
 Mahonys-Packing-frontend/coverage/
 Mahonys-Packing-frontend/.nyc_output/
+Mahonys-Packing-frontend/.env
+Mahonys-Packing-frontend/.env.example
 
 # --- Backend (Laravel / PHP) ---
 Mahonys-Packing-backend/vendor/
@@ -34,6 +36,8 @@ Mahonys-Packing-backend/Homestead.yaml
 Mahonys-Packing-backend/auth.json
 Mahonys-Packing-backend/.phpunit.cache/
 Mahonys-Packing-backend/storage/*.key
+Mahonys-Packing-backend/.env
+Mahonys-Packing-backend/.env.example
 # Keep storage structure; ignore generated content (Laravel often has .gitignore inside storage)
 Mahonys-Packing-backend/bootstrap/cache/*.php
 !Mahonys-Packing-backend/bootstrap/cache/.gitignore
