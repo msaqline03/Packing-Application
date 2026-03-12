@@ -12,6 +12,8 @@ import {
 } from "../components/SharedComponents";
 import { SITES } from "../utils/mockData";
 
+const MOBILE_BREAKPOINT = 900;
+
 export default function IncomingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,6 +39,24 @@ export default function IncomingPage() {
     new Date().toISOString().split("T")[0],
   );
   const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showGoToTop, setShowGoToTop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const handler = () => setIsMobile(mq.matches);
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const onScroll = () => setShowGoToTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMobile]);
 
   // Handle URL parameter for pre-selecting a ticket
   useEffect(() => {
@@ -260,10 +280,10 @@ export default function IncomingPage() {
         style={{
           maxWidth: 1920,
           margin: "0 auto",
-          padding: "20px 24px",
+          padding: isMobile ? "12px 14px" : "20px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: isMobile ? 12 : 16,
         }}
       >
         {/* ── TOOLBAR ───────────────────────────────────────────────────── */}
@@ -272,20 +292,22 @@ export default function IncomingPage() {
             background: "#fff",
             borderRadius: 10,
             border: "1px solid #e2e8f0",
-            padding: "14px 18px",
+            padding: isMobile ? "12px 14px" : "14px 18px",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            gap: 12,
+            gap: isMobile ? 10 : 12,
+            flexDirection: isMobile ? "column" : "row",
           }}
         >
           {/* Search */}
           <div
             style={{
               position: "relative",
-              flex: "1 1 220px",
-              minWidth: 180,
-              maxWidth: 340,
+              flex: isMobile ? "1 1 auto" : "1 1 220px",
+              minWidth: isMobile ? "100%" : 180,
+              maxWidth: isMobile ? "none" : 340,
+              width: isMobile ? "100%" : undefined,
             }}
           >
             <input
@@ -305,7 +327,17 @@ export default function IncomingPage() {
           </div>
 
           {/* Status pills */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              flexWrap: isMobile ? "nowrap" : "wrap",
+              overflowX: isMobile ? "auto" : "visible",
+              width: isMobile ? "100%" : undefined,
+              paddingBottom: isMobile ? 2 : 0,
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
             {["booked", "processing", "completed", "cancelled"].map((s) => {
               const on = selectedStatuses.includes(s);
               const colors = {
@@ -319,6 +351,7 @@ export default function IncomingPage() {
                   key={s}
                   onClick={() => toggleStatus(s)}
                   style={{
+                    flexShrink: 0,
                     background: on ? colors[s][0] : "#f3f4f6",
                     color: on ? colors[s][1] : "#6b7280",
                     border: "none",
@@ -343,7 +376,9 @@ export default function IncomingPage() {
               display: "flex",
               alignItems: "center",
               gap: 6,
-              marginLeft: "auto",
+              marginLeft: isMobile ? 0 : "auto",
+              width: isMobile ? "100%" : undefined,
+              justifyContent: isMobile ? "flex-start" : undefined,
             }}
           >
             <label
@@ -418,26 +453,33 @@ export default function IncomingPage() {
           </div>
 
           {/* Actions */}
-          <div style={{ display: "flex", gap: 6 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              width: isMobile ? "100%" : undefined,
+              justifyContent: isMobile ? "stretch" : undefined,
+            }}
+          >
             <BtnPrimary
               onClick={() => router.push("/ticket/in?mode=create")}
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
             >
-              + Create Ticket
+              + Create
             </BtnPrimary>
             <BtnSecondary
               onClick={() =>
                 selected && router.push(`/ticket/in?id=${selected.id}`)
               }
               disabled={!selected}
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
             >
               Edit
             </BtnSecondary>
             <BtnDanger
               onClick={handleDelete}
               disabled={!selected}
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
             >
               Delete
             </BtnDanger>
@@ -445,26 +487,48 @@ export default function IncomingPage() {
         </div>
 
         {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
-        <div style={{ display: "flex", gap: 16, flex: 1 }}>
-          {/* Ticket list */}
-          <DataTable
-            columns={incomingColumns}
-            data={filtered}
-            getRowKey={(t) => t.id}
-            onRowClick={(t) => setSelectedTicketId(t.id)}
-            selectedRowKey={selectedTicketId}
-            maxHeight={420}
-            emptyMessage="No tickets match the current filters."
-          />
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            flex: 1,
+            flexDirection: isMobile ? "column" : "row",
+            minHeight: 0,
+          }}
+        >
+          {/* Ticket list - DataTable on desktop, card list on mobile */}
+          {isMobile ? (
+            <MobileTicketList
+              filtered={filtered}
+              cmos={cmos}
+              customers={customers}
+              internalAccounts={internalAccounts}
+              commodities={commodities}
+              selectedTicketId={selectedTicketId}
+              onSelectTicket={setSelectedTicketId}
+            />
+          ) : (
+            <DataTable
+              columns={incomingColumns}
+              data={filtered}
+              getRowKey={(t) => t.id}
+              onRowClick={(t) => setSelectedTicketId(t.id)}
+              selectedRowKey={selectedTicketId}
+              maxHeight={420}
+              emptyMessage="No tickets match the current filters."
+            />
+          )}
 
           {/* ── INFO PANEL ──────────────────────────────────────────────── */}
           <div
             style={{
-              width: 280,
+              width: isMobile ? "100%" : 280,
+              minWidth: isMobile ? 0 : undefined,
+              flex: isMobile ? "0 0 auto" : "0 0 280px",
               background: "#fff",
               borderRadius: 10,
               border: "1px solid #e2e8f0",
-              padding: 18,
+              padding: isMobile ? 14 : 18,
               display: "flex",
               flexDirection: "column",
               gap: 14,
@@ -564,6 +628,172 @@ export default function IncomingPage() {
           </div>
         </div>
       </div>
+
+      {/* Go to top (mobile only) */}
+      {isMobile && showGoToTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            zIndex: 50,
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            border: "none",
+            background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+            color: "#fff",
+            fontSize: 20,
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          aria-label="Go to top"
+        >
+          ↑
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MobileTicketList({
+  filtered,
+  cmos,
+  customers,
+  internalAccounts,
+  commodities,
+  selectedTicketId,
+  onSelectTicket,
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#475569",
+          padding: "4px 0",
+        }}
+      >
+        Tickets ({filtered.length})
+      </div>
+      {filtered.length === 0 ? (
+          <div
+            style={{
+              color: "#94a3b8",
+              fontSize: 13,
+              textAlign: "center",
+              padding: 32,
+            }}
+          >
+            No tickets match the current filters.
+          </div>
+        ) : (
+          filtered.map((t) => {
+            const cmo = cmos.find((c) => c.id === t.cmoId);
+            const customer = cmo
+              ? customers.find((c) => c.id === cmo.customerId) ||
+                internalAccounts.find((a) => a.id === cmo.customerId)
+              : null;
+            const commodity = cmo
+              ? commodities.find((c) => c.id === cmo.commodityId)
+              : null;
+            const net =
+              (t.grossWeights.reduce((a, b) => a + b, 0) -
+                t.tareWeights.reduce((a, b) => a + b, 0)) /
+              1000;
+            const isSelected = t.id === selectedTicketId;
+            return (
+              <div
+                key={t.id}
+                onClick={() => onSelectTicket(t.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectTicket(t.id);
+                  }
+                }}
+                style={{
+                  background: isSelected ? "#eff6ff" : "#fff",
+                  border: `2px solid ${isSelected ? "#3b82f6" : "#e2e8f0"}`,
+                  borderRadius: 10,
+                  padding: 12,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  minHeight: 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#2563eb",
+                    }}
+                  >
+                    #{t.id}
+                  </span>
+                  <StatusBadge status={t.status} />
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#1e293b",
+                    marginBottom: 2,
+                  }}
+                >
+                  {customer?.name || "—"}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#64748b",
+                    marginBottom: 4,
+                  }}
+                >
+                  {commodity?.description || "—"}
+                  {t.grade ? ` · ${t.grade}` : ""}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: 11,
+                    color: "#94a3b8",
+                  }}
+                >
+                  <span>{t.truck?.name || "No truck"}</span>
+                  {net > 0 && (
+                    <span
+                      style={{
+                        fontWeight: 600,
+                        color: "#059669",
+                      }}
+                    >
+                      {net.toFixed(1)} t
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
     </div>
   );
 }

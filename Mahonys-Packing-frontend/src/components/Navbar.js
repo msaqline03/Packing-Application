@@ -174,6 +174,25 @@ export function Navbar({ site, onSiteChange, sites }) {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // When mobile menu opens, expand the first-level item that contains the current page
+  useEffect(() => {
+    if (!mobileOpen || !isMobile) return;
+    setOpenMobileMenus((prev) => {
+      const next = { ...prev };
+      NAV_ITEMS.forEach((item) => {
+        if (item.children) {
+          const isChildActive =
+            item.label === "Price Settings" &&
+            (pathname === "/terminals" || pathname === "/empty-container-parks")
+              ? false
+              : item.children.some((c) => childHrefMatches(pathname, c));
+          if (isChildActive) next[item.label] = true;
+        }
+      });
+      return next;
+    });
+  }, [mobileOpen, isMobile, pathname]);
+
   const handleMobileMenuToggle = (label) => {
     setOpenMobileMenus((prev) => ({
       ...prev,

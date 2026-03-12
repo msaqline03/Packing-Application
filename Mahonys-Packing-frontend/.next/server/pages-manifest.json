@@ -2,7 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/empty-container-parks": "pages/empty-container-parks.js",
-  "/incoming": "pages/incoming.js",
-  "/outgoing": "pages/outgoing.js"
+  "/users": "pages/users.js",
+  "/userPermissions": "pages/userPermissions.js",
+  "/customers": "pages/customers.js"
 }

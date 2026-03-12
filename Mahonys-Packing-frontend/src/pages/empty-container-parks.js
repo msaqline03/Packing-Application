@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import {
   Navbar,
@@ -12,6 +12,122 @@ import {
   DataTable,
 } from "../components/SharedComponents";
 import { SITES } from "../utils/mockData";
+
+const MOBILE_BREAKPOINT = 900;
+
+function MobileParkList({
+  filtered,
+  selectedParkId,
+  onSelectPark,
+  search,
+  formatPrice,
+}) {
+  const emptyMessage = search
+    ? "No container parks match your search."
+    : "No container parks found. Add your first one!";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#475569",
+          padding: "4px 0",
+        }}
+      >
+        Container Parks ({filtered.length})
+      </div>
+      {filtered.length === 0 ? (
+          <div
+            style={{
+              color: "#94a3b8",
+              fontSize: 13,
+              textAlign: "center",
+              padding: 32,
+            }}
+          >
+            {emptyMessage}
+          </div>
+        ) : (
+          filtered.map((p) => {
+            const isSelected = p.id === selectedParkId;
+            const contactCount = (p.contacts && p.contacts.length) || 0;
+            return (
+              <div
+                key={p.id}
+                onClick={() => onSelectPark(p.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectPark(p.id);
+                  }
+                }}
+                style={{
+                  background: isSelected ? "#eff6ff" : "#fff",
+                  border: `2px solid ${isSelected ? "#3b82f6" : "#e2e8f0"}`,
+                  borderRadius: 10,
+                  padding: 12,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  minHeight: 0,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#2563eb",
+                    }}
+                  >
+                    {p.code || "—"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#1e293b",
+                    marginBottom: 4,
+                  }}
+                >
+                  {p.name || "—"}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#64748b",
+                    marginBottom: 4,
+                  }}
+                >
+                  {p.containerChainName || "—"}
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "#94a3b8",
+                  }}
+                >
+                  {contactCount} contact{contactCount !== 1 ? "s" : ""}
+                  {" · "}
+                  Rev: {formatPrice(p.revenuePrice)} / Exp: {formatPrice(p.expensePrice)}
+                </div>
+              </div>
+            );
+          })
+        )}
+    </div>
+  );
+}
 
 function InfoRow({ label, value, highlight }) {
   return (
@@ -63,6 +179,24 @@ export default function EmptyContainerParksPage() {
     revenuePrice: "",
     expensePrice: "",
   });
+  const [isMobile, setIsMobile] = useState(false);
+  const [showGoToTop, setShowGoToTop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const handler = () => setIsMobile(mq.matches);
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const onScroll = () => setShowGoToTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMobile]);
 
   const filtered = useMemo(() => {
     return containerParks.filter((p) => {
@@ -225,37 +359,65 @@ export default function EmptyContainerParksPage() {
         style={{
           maxWidth: 1920,
           margin: "0 auto",
-          padding: "20px 24px",
+          padding: isMobile ? "12px 14px" : "20px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: isMobile ? 12 : 16,
         }}
       >
-        <h1
+        {/* ── BREADCRUMB & PAGE HEADER ────────────────────────────────────── */}
+        <div
           style={{
-            margin: "0 0 4px",
-            fontSize: 22,
-            fontWeight: 700,
-            color: "#0f1e3d",
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
           }}
         >
-          Empty Container Parks
-        </h1>
-        <p
-          style={{
-            margin: "0 0 16px",
-            fontSize: 13,
-            color: "#64748b",
-            lineHeight: 1.5,
-          }}
-        >
-          Manage empty container park contacts, locations, and pricing.
-          {containerParks.length > 0 && (
-            <span style={{ marginLeft: 8, fontWeight: 600, color: "#0f1e3d" }}>
-              ({containerParks.length} loaded)
+          <nav
+            style={{
+              fontSize: 12,
+              color: "#64748b",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            aria-label="Breadcrumb"
+          >
+            <span>Contacts</span>
+            <span style={{ color: "#cbd5e1" }}>/</span>
+            <span style={{ color: "#0f1e3d", fontWeight: 600 }}>
+              Empty Container Parks
             </span>
+          </nav>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: isMobile ? 20 : 24,
+              fontWeight: 700,
+              color: "#0f1e3d",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Empty Container Parks
+          </h1>
+          {!isMobile && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: "#64748b",
+                lineHeight: 1.5,
+              }}
+            >
+              Manage empty container park contacts, locations, and pricing.
+              {containerParks.length > 0 && (
+                <span style={{ marginLeft: 8, fontWeight: 600, color: "#0f1e3d" }}>
+                  ({containerParks.length} loaded)
+                </span>
+              )}
+            </p>
           )}
-        </p>
+        </div>
 
         {/* ── TOOLBAR ───────────────────────────────────────────────────── */}
         <div
@@ -263,20 +425,22 @@ export default function EmptyContainerParksPage() {
             background: "#fff",
             borderRadius: 10,
             border: "1px solid #e2e8f0",
-            padding: "14px 18px",
+            padding: isMobile ? "12px 14px" : "14px 18px",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            gap: 12,
+            gap: isMobile ? 10 : 12,
             justifyContent: "space-between",
+            flexDirection: isMobile ? "column" : "row",
           }}
         >
           <div
             style={{
               position: "relative",
-              flex: "1 1 220px",
-              minWidth: 180,
-              maxWidth: 400,
+              flex: isMobile ? "1 1 auto" : "1 1 220px",
+              minWidth: isMobile ? "100%" : 180,
+              maxWidth: isMobile ? "none" : 400,
+              width: isMobile ? "100%" : undefined,
             }}
           >
             <input
@@ -295,21 +459,40 @@ export default function EmptyContainerParksPage() {
             />
           </div>
 
-          <div style={{ display: "flex", gap: 6 }}>
-            <BtnPrimary onClick={openCreateModal} style={{ fontSize: 12 }}>
-              + Add Container Park
-            </BtnPrimary>
-            <BtnSecondary
-              onClick={openEditModal}
-              disabled={!selected}
-              style={{ fontSize: 12 }}
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              width: isMobile ? "100%" : undefined,
+              justifyContent: isMobile ? "stretch" : undefined,
+            }}
+          >
+            <BtnPrimary
+              onClick={openCreateModal}
+              style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
             >
-              Edit
-            </BtnSecondary>
+              + Add Park
+            </BtnPrimary>
+            {isMobile && selected ? (
+              <BtnPrimary
+                onClick={openEditModal}
+                style={{ fontSize: 12, flex: 1 }}
+              >
+                View / Edit
+              </BtnPrimary>
+            ) : (
+              <BtnSecondary
+                onClick={openEditModal}
+                disabled={!selected}
+                style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
+              >
+                Edit
+              </BtnSecondary>
+            )}
             <BtnDanger
               onClick={handleDelete}
               disabled={!selected}
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, flex: isMobile ? 1 : undefined }}
             >
               Delete
             </BtnDanger>
@@ -317,42 +500,63 @@ export default function EmptyContainerParksPage() {
         </div>
 
         {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
-        <div style={{ display: "flex", gap: 16, flex: 1, minHeight: 0 }}>
-          {/* List */}
-          <div
-            style={{
-              flex: "1 1 0",
-              minHeight: 400,
-              minWidth: 0,
-              background: "#fff",
-              borderRadius: 10,
-              border: "1px solid #e2e8f0",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <DataTable
-              key={`parks-${containerParks.length}-${(filtered[0]?.id ?? "")}`}
-              columns={parkColumns}
-              data={Array.isArray(filtered) ? filtered : []}
-              getRowKey={(p) => (p?.id != null ? String(p.id) : "")}
-              onRowClick={(p) => setSelectedParkId(p.id)}
-              selectedRowKey={selectedParkId}
-              maxHeight={420}
-              fillHeight
-              emptyMessage={
-                search
-                  ? "No container parks match your search."
-                  : "No container parks found. Add your first one!"
-              }
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            flex: 1,
+            minHeight: 0,
+            flexDirection: isMobile ? "column" : "row",
+          }}
+        >
+          {/* List - DataTable on desktop, card list on mobile */}
+          {isMobile ? (
+            <MobileParkList
+              filtered={filtered}
+              selectedParkId={selectedParkId}
+              onSelectPark={setSelectedParkId}
+              search={search}
+              formatPrice={formatPrice}
             />
-          </div>
+          ) : (
+            <div
+              style={{
+                flex: "1 1 0",
+                minHeight: 400,
+                minWidth: 0,
+                background: "#fff",
+                borderRadius: 10,
+                border: "1px solid #e2e8f0",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <DataTable
+                key={`parks-${containerParks.length}-${(filtered[0]?.id ?? "")}`}
+                columns={parkColumns}
+                data={Array.isArray(filtered) ? filtered : []}
+                getRowKey={(p) => (p?.id != null ? String(p.id) : "")}
+                onRowClick={(p) => setSelectedParkId(p.id)}
+                selectedRowKey={selectedParkId}
+                maxHeight={420}
+                fillHeight
+                emptyMessage={
+                  search
+                    ? "No container parks match your search."
+                    : "No container parks found. Add your first one!"
+                }
+              />
+            </div>
+          )}
 
-          {/* Detail panel */}
+          {/* Detail panel (desktop only; hidden on mobile) */}
+          {!isMobile && (
           <div
             style={{
               width: 360,
+              minWidth: 0,
+              flex: "0 0 360px",
               background: "#fff",
               borderRadius: 10,
               border: "1px solid #e2e8f0",
@@ -440,8 +644,38 @@ export default function EmptyContainerParksPage() {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
+
+      {/* Go to top (mobile only) */}
+      {isMobile && showGoToTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            zIndex: 50,
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            border: "none",
+            background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+            color: "#fff",
+            fontSize: 20,
+            cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          aria-label="Go to top"
+        >
+          ↑
+        </button>
+      )}
 
       {/* ── MODAL ──────────────────────────────────────────────────────── */}
       <Modal

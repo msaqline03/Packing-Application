@@ -19,15 +19,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/incoming": [
+    "/customers": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/incoming.js"
+      "static/chunks/pages/customers.js"
     ],
-    "/outgoing": [
+    "/users": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/outgoing.js"
+      "static/chunks/pages/users.js"
     ]
   },
   "ampFirstPages": []
